@@ -1,0 +1,6 @@
+plan.md
+.DS_Store
+.Rbuildignore
+.Rprofile
+.Rproj.user/
+rpackage_workshop.Rproj

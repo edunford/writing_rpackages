@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title> Writing R Packages</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Eric Dunford" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# <br>Writing R Packages
+## <br><em>Enhance and Advance</em>
+### Eric Dunford
+### <br><em>McCourt School of Public Policy</em><br>Georgetown University
+
+---
+
+
+
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;
+
+.center[
+### All slides and materials can be found at 
+### [http://ericdunford.com/writing_rpackages](http://ericdunford.com/writing_rpackages)
+]
+
+---
+
+### Today will be a brief introduction. For a deeper dive, read...
+
+### [R Packages: _Organize, Test, Document, &amp; Share Your Code_](https://r-pkgs.org/index.html) by Hadley Wickham and Jenny Bryan.
+
+.center[
+
+&lt;img src = "figures/r_packages_cover.png" width=40%, height=40%&gt;
+]
+
+---
+
+## When to write an R Package
+
+&lt;br&gt;
+
+### (1) Repeat code _more than once_ &amp;rarr; write a function.
+
+--
+
+### (2) Use functions more than once in a project &amp;rarr; write a function script.
+
+--
+
+### (3) Use functions across projects and tasks &amp;rarr; write a package.
+
+---
+
+## What is an R package
+
+#### (1) Set of **Functions** (and logic)
+
+--
+
+#### (2) **Documentation**
+
+&gt; Clear guidance on how to use your functions
+
+--
+
+#### (3) **Dependencies** 
+
+&gt; Functionality from other packages that you're drawing from;
+
+--
+
+#### (4) Example **Data** 
+
+&gt; Documentation require examples, and examples sometimes require unique data. 
+
+--
+
+#### (5) **Vignettes**/Walkthrough
+
+&gt; Show us how to use your package; outline the package workflow. 
+
+---
+
+### R packges that make writing R packages incredibly easy
+
+
+### [`roxygen2`](https://cran.r-project.org/web/packages/roxygen2/vignettes/roxygen2.html)
+
+&gt; Streamlines creating documentation.
+
+.center[
+
+&lt;img src = "figures/roxygen2_logo.png" width=40%, height=40%&gt;
+]
+
+---
+
+### R packges that make writing R packages incredibly easy
+
+
+### [`usethis`](https://usethis.r-lib.org/)
+
+&gt; Automates repetitive tasks during development. 
+
+.center[
+
+&lt;img src = "figures/usethis_logo.png" width=40%, height=40%&gt;
+]
+
+---
+
+### R packges that make writing R packages incredibly easy
+
+
+### [`testthat`](https://testthat.r-lib.org/)
+
+&gt; Writing &amp; running unit tests. 
+
+.center[
+
+&lt;img src = "figures/testthat_logo.png" width=40%, height=40%&gt;
+]
+
+
+---
+
+class: inverse, center, middle
+
+# 10 "Easy" Steps to R Package Development
+
+---
+
+### (1) Have a reason to build a package
+
+- Functions you use over and over again that you want to easily access
+- Standardize workflow and processes across your team by building a dedicated library
+- Have a novel idea for a method/process/workflow that doesn't exist in R but should
+
+--
+
+### (2) Come up with a name for your package
+
+- Contain only ASCII letters, numbers, and '.'
+- Have at least two characters
+- Start with a letter
+- Not end with '.'
+- `available::available("my_package_name", browse = FALSE)`
+
+---
+
+### (3) Build the package infrastructure
+
+```r
+# where your package should live
+path_to_your_project &lt;- "path/to/a/folder"
+
+# initialize everything you'd need to get started
+usethis::create_package(path_to_your_project)
+
+# license your package (so no one can steal 
+# &amp; profit from your package)
+usethis::use_mit_license("Your Name") 
+
+# Setup unit tests (more on this later)
+usethis::use_test("tests")
+
+# Create a readme (to help generate a nice github vignette)
+usethis::use_readme_rmd()
+
+# Initialize your git repository
+usethis::use_git(message="initial commit of my package")
+```
+
+---
+
+### (4) Drop you functions into the `R/` folder. 
+
+&gt; Create a file &amp;rarr; think carefully about naming conventions 
+
+--
+
+### (5) Add Roxygen2 skeletons to each function and fill in.
+
+&gt; shift + alt + cmd + r (when cursor is on the function on a mac in RStudio) OR click on the "wand" icon and select "Insert Roxygen Skeleton"
+
+```r
+#' Title
+#'
+#' @param arg1 
+#' @param arg2 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+my_function &lt;- function(arg1=NA,arg2=NA){
+  return("hello")
+}
+```
+---
+
+### (6) Make dependencies explicit
+
+- ` usethis::use_package("dplyr")` &amp;rarr; imports ALL functions from that package.
+  - different `type=` are allowed, user "imports".
+- Explicitly call to the packages methods in your code using it's namespace reference, e.g. `dplyr::select()`
+- Use `usethis::` to add common package dependencies, such as the pipe. `usethis::use_pipe()`
+
+--
+
+### (7) Fill in the `DESCRIPTION.R`
+
+- Add a one sentence description (all in title case) of what your package does. `Title:`
+- Add a one paragraph description of what your package does. `Description:`
+- Fill in the author(s) information `Authors@R:`
+- Down the line, you'll want to iterate on the version number. `Description:`
+
+---
+
+### (8) Design unit tests and run them
+
+- Why? &amp;rarr; more on this in a moment
+- To run tests:
+  - `devtools::test()`
+  - shift + cmd + T (on a mac in RStudio)
+
+--
+
+### (9) Build documentation
+
+- Why? 
+  - "Building" the documentation translates all the information in your Roxygen2 skeleton to a special `.Rd` (R Documentation) file housed in the `man/` folder. 
+  - Documentation is required for every exported function
+  - This is what pops up in the "help" pane when you run `?function_name()`
+- How?
+  - `devtools::document(roclets = c('rd', 'collate', 'namespace'))`
+  - shift + cmd + D (on a mac in RStudio) 
+  - "Build" Tab in R studio &amp;rarr; click on "more" drop down  &amp;rarr; click on "document"
+
+---
+
+### (10) Build the package
+
+- Why?
+  - "Building" installs your package on your machine (so you can use it like any other package).
+- How?
+  - commandline: `R CMD INSTALL --no-multiarch --with-keep.source YourPackageName`
+  - shift + cmd + B (on a mac in RStudio)
+  - "Build" Tab in R studio &amp;rarr; click on "Install and Restart".
+- When you're ready to deploy your package to CRAN:
+  - "Build" Tab in R studio &amp;rarr; click on "more" drop down  &amp;rarr; click on "Build Source Package"
+  - This generates a `.tar.gz` file. This is the file you submit to CRAN. 
+
+---
+
+class: inverse, center, middle
+
+# Regarding Roxygen Skeletons
+
+---
+
+### Let's break this down
+
+
+```r
+#' Title
+#'
+#' @param arg1 
+#' @param arg2
+#'
+#' @return
+#' @export
+#'
+#' @examples
+my_function &lt;- function(arg1=NA,arg2=NA){
+  print(paste(arg1,arg2,sep="_")) 
+}
+```
+
+
+---
+
+### Let's break this down
+
+
+```r
+#' Title
+#'
+#' @param arg1 
+#' @param arg2
+#'
+#' @return
+#' @export
+#'
+#' @examples
+my_function &lt;- function(arg1=NA,arg2=NA){
+  print(paste(arg1,arg2,sep="_")) 
+}
+```
+
+---
+
+
+### The function name is at the top with a description of what the function does beneath it.
+
+
+
+```r
+*#' my_function()
+#'
+*#' This function pastes together two inputs in a string
+#'
+#' @param arg1 
+#' @param arg2
+#'
+#' @return
+#' @export
+#'
+#' @examples
+my_function &lt;- function(arg1=NA,arg2=NA){
+  print(paste(arg1,arg2,sep="_")) 
+}
+```
+
+---
+
+
+### `@param` describes each function input (what it does, valid inputs, default values)
+
+
+```r
+#' my_function() 
+#'
+#' This function pastes together two inputs in a string 
+#'
+*#' @param arg1 a string to be pasted; default is NA.
+*#' @param arg2 a string to be pasted; default is NA.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+my_function &lt;- function(arg1=NA,arg2=NA){
+  print(paste(arg1,arg2,sep="_")) 
+}
+```
+
+---
+
+
+### `@return` describes what the function returns
+
+
+```r
+#' my_function() 
+#'
+#' This function pastes together two inputs in a string 
+#'
+#' @param arg1 a string to be pasted; default is NA. 
+#' @param arg2 a string to be pasted; default is NA. 
+#'
+*#' @return a string
+#' @export
+#'
+#' @examples
+my_function &lt;- function(arg1=NA,arg2=NA){
+  print(paste(arg1,arg2,sep="_")) 
+}
+```
+
+---
+
+
+### `@export` indicates that the function should be exported into the package namespace (i.e. the function can be called when the package is imported)
+
+
+```r
+#' my_function() 
+#'
+#' This function pastes together two inputs in a string 
+#'
+#' @param arg1 a string to be pasted; default is NA. 
+#' @param arg2 a string to be pasted; default is NA. 
+#'
+#' @return a string 
+*#' @export
+#'
+#' @examples
+my_function &lt;- function(arg1=NA,arg2=NA){
+  print(paste(arg1,arg2,sep="_")) 
+}
+```
+
+---
+
+
+### `@examples` offers an example of how the function should be executed. You should be able to copy and paste this example into the R console and it should run. 
+
+
+```r
+#' my_function() 
+#'
+#' This function pastes together two inputs in a string 
+#'
+#' @param arg1 a string to be pasted; default is NA. 
+#' @param arg2 a string to be pasted; default is NA. 
+#'
+#' @return a string 
+#' @export 
+#'
+*#' @examples
+*#'
+*#' my_function("hello","cat")
+*#'
+my_function &lt;- function(arg1=NA,arg2=NA){
+  print(paste(arg1,arg2,sep="_")) 
+}
+```
+
+---
+
+class: inverse, center, middle
+
+# Testing
+
+---
+
+### Testing is a vital part of package development. It ensures that your code does what you want it to do. 
+
+--
+
+### Why design tests?
+
+- Fewer bugs
+- More robust code
+- Peace of mind as you improve/alter functionality
+
+--
+
+### How it works?
+
+- `testthat` makes a special folder in your package directory. 
+- Tests are composed of **expectations** organized into individual files.
+- The output from your code is tested against the expected output. If it matches, it passes; otherwise, it throws an error. 
+
+---
+
+## Setting up a test
+
+### (1) Context
+
+&gt; Group together related tests with a context. E.g. "these tests all deal with how data is ingested"
+
+```r
+context("Data prepping functions")
+```
+
+---
+
+## Setting up a test
+
+### (1) Context
+
+### (2) Expectation
+
+&gt; What output should one expect your function to produce? 
+
+```r
+a &lt;- 10
+testthat::expect_equal(a, 10)
+```
+
+```r
+testthat::expect_identical(sqrt(2) ^ 2, 2)
+```
+
+---
+
+## Setting up a test
+
+### (1) Context
+
+### (2) Expectation
+
+### (3) Test
+
+&gt; group together multiple expecations to test the output from a function
+
+```r
+context("String length")
+library(stringr)
+
+test_that("str_length is number of characters", {
+  expect_equal(str_length("a"), 1)
+  expect_equal(str_length("ab"), 2)
+  expect_equal(str_length("abc"), 3)
+})
+```
+
+[_example source_](https://r-pkgs.org/tests.html)
+
+---
+
+class: inverse, center, middle
+
+# Distribution
+
+---
+
+## Sharing Your Package with the World
+
+### Two (most popular) ways of doing this...
+
+--
+
+### (1) Github
+
+&gt; Upload your package repository to Github. Anyone can install from a public repo. 
+```r
+devtools::install_github('your_account/your_package')
+```
+
+&gt; Use Github features like readme and pages to create clean, detailed vignettes and guidance on how to user your package. 
+
+--
+
+### (2) Comprehensive R Archive Network (CRAN)
+
+&gt; Build your source package `.tar.gz` and submit via the CRAN portal (https://cran.r-project.org/submit.html)
+
+---
+
+## When to submit your package to CRAN
+
+### It's stable
+
+&gt; Code is (relatively) bug free and runs without issues on different machines (mac/windows/linux)
+
+--
+
+### It's generalized
+
+&gt; Package operates across an array of problem domains and object types (i.e. you've built logic for dealing with different class types). 
+
+--
+
+### It's distinct
+
+&gt; Package offers novel functionality not already contained within an existing package. If not, then your package is more personalized and should just live on github.
+
+---
+
+## When to submit your package to CRAN
+
+
+
+### Remember...
+
+#### CRAN is a marketplace &amp;rarr; Having a package on CRAN doesn't mean anything if no one uses it. 
+#### Follow trends and conventions. 
+#### Think about the user. 
+#### Design code that plays along with existing (widely adopted) workflows (e.g. tidy ecosystem). 
+
+---
+
+# Example &amp;rarr; [tidysynth](https://github.com/edunford/tidysynth)
+
+.center[
+### [https://github.com/edunford/tidysynth](https://github.com/edunford/tidysynth)
+]
+
+&lt;br&gt;
+
+.center[
+&lt;img src = "figures/tidysynth_logo.png" width=40%, height=40%&gt;
+]
+
+---
+
+&lt;br&gt;
+.center[
+# Thanks!
+&lt;br&gt;
+
+.center[
+### Eric Dunford 
+_McCourt School of Public Policy_&lt;br&gt;
+**_Georgetown University_**&lt;br&gt;
+eric.dunford@georgetown.edu&lt;br&gt;
+[ericdunford.com](http://ericdunford.com/)
+]
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
