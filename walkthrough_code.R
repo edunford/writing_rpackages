@@ -7,7 +7,7 @@ require(forcats)
 require(janitor)
 require(ggrepel)
 require(ggthemes)
-
+require(tibble)
 
 # Fake Data ---------------------------------------------------------------
 set.seed(123)

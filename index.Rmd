@@ -573,6 +573,19 @@ devtools::install_github('your_account/your_package')
 
 ---
 
+# Live Walkthrough
+
+
+<br>
+
+### Let's start with some simple code, generalize it as functions, then construct a package around it. 
+
+<br>
+
+### Copy and Paste the following [Code](https://raw.githubusercontent.com/edunford/writing_rpackages/main/walkthrough_code.R) into an R Script.
+
+---
+
 <br>
 .center[
 # Thanks!
